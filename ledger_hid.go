@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/zondax/hid"
+	"github.com/dolmen-go/hid"
 )
 
 const (
