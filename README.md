@@ -10,5 +10,10 @@ Linux, OSX and Windows are supported.
 
 ## Building
 ```bash
-go build
+# Build module:
+make module
+# Build & run tests:
+make test
+# Build & run example code:
+make example && ./example-ledger-go
 ```

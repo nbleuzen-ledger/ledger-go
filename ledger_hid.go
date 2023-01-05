@@ -173,45 +173,52 @@ func (ledger *LedgerDeviceHID) readThread() {
 	}
 }
 
-func (ledger *LedgerDeviceHID) Exchange(command []byte) ([]byte, error) {
+func (ledger *LedgerDeviceHID) ExchangeNoCheck(command []byte) ([]byte, uint16, error) {
 	if len(command) < 5 {
-		return nil, fmt.Errorf("APDU commands should not be smaller than 5")
+		return nil, 0, fmt.Errorf("APDU commands should not be smaller than 5")
 	}
 
 	if (byte)(len(command)-5) != command[4] {
-		return nil, fmt.Errorf("APDU[data length] mismatch")
+		return nil, 0, fmt.Errorf("APDU[data length] mismatch")
 	}
 
 	serializedCommand, err := WrapCommandAPDU(Channel, command, PacketSize)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	// Write all the packets
 	_, err = ledger.write(serializedCommand)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	readChannel := ledger.Read()
 
 	response, err := UnwrapResponseAPDU(Channel, readChannel, PacketSize)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	if len(response) < 2 {
-		return nil, fmt.Errorf("len(response) < 2")
+		return nil, 0, fmt.Errorf("len(response) < 2")
 	}
 
 	swOffset := len(response) - 2
 	sw := codec.Uint16(response[swOffset:])
 
-	if sw != 0x9000 {
-		return response[:swOffset], errors.New(ErrorMessage(sw))
-	}
+	return response[:swOffset], sw, nil
+}
 
-	return response[:swOffset], nil
+func (ledger *LedgerDeviceHID) Exchange(command []byte) ([]byte, error) {
+	response, sw, err := ledger.ExchangeNoCheck(command)
+	if err != nil {
+		return nil, err
+	}
+	if sw != 0x9000 {
+		return response, errors.New(ErrorMessage(sw))
+	}
+	return response, nil
 }
 
 func (ledger *LedgerDeviceHID) Close() error {

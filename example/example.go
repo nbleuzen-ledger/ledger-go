@@ -71,7 +71,8 @@ func (ledger *LedgerApp) Connect() error {
 	if deviceCount := ledgerAdmin.CountDevices(); deviceCount == 0 {
 		return fmt.Errorf("No Ledger device connected")
 	} else if deviceCount > 1 {
-		fmt.Printf("%d Ledger devices connected, will try to connect to the first one in the following list:\n", deviceCount)
+		fmt.Printf("%d Ledger devices connected, will try to connect to the " +
+				"first one in the following list:\n", deviceCount)
 		ledgerAdmin.ListDevices()
 	}
 
@@ -93,8 +94,9 @@ func (ledger *LedgerApp) Close() {
 // Sets the name of the app
 func (ledger *LedgerApp) GetAppName() error {
 	message := []byte{CLA, insGetAppName, 0 /*P1*/, 0 /*P2*/, 0 /*Data length*/}
-	response, err := ledger.api.Exchange(message)
+	response, sw, err := ledger.api.ExchangeNoCheck(message)
 	if err != nil {
+		fmt.Printf("insGetAppName -> SW: %04x\n", sw)
 		return err
 	}
 

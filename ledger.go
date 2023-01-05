@@ -23,6 +23,7 @@ type LedgerAdmin interface {
 }
 
 type LedgerDevice interface {
+	ExchangeNoCheck(command []byte) ([]byte, uint16, error)
 	Exchange(command []byte) ([]byte, error)
 	Close() error
 }
